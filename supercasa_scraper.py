@@ -215,8 +215,7 @@ MODO_HEADLESS = os.environ.get("MODO_HEADLESS", "True").lower() == "true"
 #          LIMITE_IMOVEIS_MODO_TESTE imóveis processados (ver abaixo).
 # False -> escreve mesmo na tabela `anuncios_imoveis` da base de dados Aiven,
 #          e percorre TUDO, sem limite.
-# MODO_TESTE = os.environ.get("MODO_TESTE", "False").lower() == "true"
-MODO_TESTE = "false"
+MODO_TESTE = os.environ.get("MODO_TESTE", "False").lower() == "true"
 
 # --- Limite de imóveis a processar em modo de teste -------------------------
 # Só tem efeito quando MODO_TESTE = True. Ponha None para não ter limite
@@ -386,10 +385,22 @@ def ir_para_url_com_espera(driver, url):
     """Navega para o URL e espera até a Cloudflare libertar a página."""
     driver.get(url)
     inicio = time.time()
+    titulo_inicial = driver.title
+    ciclos = 0
     while time.time() - inicio < SEGUNDOS_MAX_ESPERA_CLOUDFLARE:
         titulo = driver.title.lower()
         if "just a moment" not in titulo and "momento" not in titulo:
+            duracao = time.time() - inicio
+            if ciclos == 0:
+                # Resolveu-se logo ao primeiro segundo - vale a pena registar
+                # para diagnóstico, porque o normal (visto em testes) é
+                # demorar uns bons segundos da primeira vez numa sessão nova.
+                log.info(
+                    f"    [DIAGNÓSTICO] Página \"resolvida\" em {duracao:.1f}s "
+                    f"(título inicial: {titulo_inicial!r} -> título final: {driver.title!r})"
+                )
             return True
+        ciclos += 1
         time.sleep(1)
     log.warning(f"Desafio da Cloudflare não resolveu a tempo em: {url}")
     return False
@@ -478,6 +489,19 @@ def colher_todos_os_anuncios(driver, url_base, limite=None):
         anuncios_da_pagina = parse_listing_page(driver.page_source)
 
         if not anuncios_da_pagina:
+            # DIAGNÓSTICO: uma página genuinamente sem resultados deve ter
+            # a palavra "property-card" ausente mas o resto da página
+            # (menu, rodapé, etc.) presente e com tamanho normal. Se o
+            # HTML for muito pequeno, ou ainda tiver "moment"/"cloudflare",
+            # é sinal de que a página não chegou a carregar como deveria.
+            html_atual = driver.page_source
+            log.info(
+                f"  [DIAGNÓSTICO] título={driver.title!r} | "
+                f"tamanho_html={len(html_atual)} | "
+                f"tem_property_card={'property-card' in html_atual} | "
+                f"tem_moment_no_html={'just a moment' in html_atual.lower()} | "
+                f"tem_cloudflare={'cloudflare' in html_atual.lower()}"
+            )
             log.info(f"  Página {pagina} sem anúncios reais - fim da paginação.")
             break
 
