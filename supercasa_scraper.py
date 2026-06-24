@@ -355,12 +355,12 @@ LINKS_PARA_SCRAPER = [
 ]
 
 # --- Tempos de espera e "arrefecimento" (anti-bot) --------------------------
-ESPERA_MIN_ENTRE_PEDIDOS = 3.0
-ESPERA_MAX_ENTRE_PEDIDOS = 7.0
-PEDIDOS_ANTES_DE_ARREFECER = 15
+ESPERA_MIN_ENTRE_PEDIDOS = 8.0
+ESPERA_MAX_ENTRE_PEDIDOS = 18.0
+PEDIDOS_ANTES_DE_ARREFECER = 25
 PAUSA_DE_ARREFECIMENTO = (20, 40)
 MAX_PAGINAS_POR_LINK = 40
-SEGUNDOS_MAX_ESPERA_CLOUDFLARE = 25
+SEGUNDOS_MAX_ESPERA_CLOUDFLARE = 32
 
 
 logging.basicConfig(
@@ -510,7 +510,7 @@ def fazer_login(driver):
     try:
         log.info("A iniciar sessão no Supercasa...")
 
-        if not ir_para_url_com_espera(driver, "https://supercasa.pt/"):
+        if not ir_para_url_com_espera(driver, "https://supercasa.pt/", tentativas=6):
             log.warning("Não foi possível abrir a página inicial para login - a continuar sem sessão.")
             return False
 
