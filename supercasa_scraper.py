@@ -99,17 +99,41 @@
      base de dados, em vez de tentar capturar tudo de uma vez. O mesmo
      princípio já era usado no scraper do Idealista.
 
-  Como usar
-  ---------
+  10) Configuração via variáveis de ambiente (.env / Secrets do GitHub)
+      -----------------------------------------------------------------------
+      A secção CONFIGURAÇÃO já não tem a password da base de dados escrita
+      em texto (não é seguro, agora que este ficheiro vive num repositório
+      Git). Em vez disso, lê tudo de variáveis de ambiente:
+        - Localmente: cria um ficheiro chamado .env (na mesma pasta do
+          script, NUNCA enviado para o GitHub) com, no mínimo:
+            DATABASE_URL=postgres://...a tua ligação real do Aiven...
+          Ver o ficheiro .env.example como modelo.
+        - No GitHub Actions: a mesma variável é definida como "Secret" do
+          repositório, e o workflow injeta-a automaticamente - não precisas
+          de ficheiro .env nenhum lá.
+
+  Como usar (no teu computador, Windows/Spyder)
+  ----------------------------------------------
     1. Criar primeiro a tabela na base de dados (correr o ficheiro
-       criar_tabela_anuncios_imoveis.sql no Aiven Query Editor ou DBeaver).
-    2. Preencher a secção CONFIGURAÇÃO abaixo (ligação à BD, lista de URLs).
-    3. Decidir o MODO_TESTE (True = não escreve na BD, só mostra e grava
+       criar_tabela_anuncios_imoveis.sql no Aiven Query Editor ou DBeaver) -
+       só é preciso fazer isto uma vez.
+    2. Criar o ficheiro .env (ver .env.example) com a tua DATABASE_URL.
+    3. Preencher a secção CONFIGURAÇÃO abaixo (lista de URLs, etc.).
+    4. Decidir o MODO_TESTE (True = não escreve na BD, só mostra e grava
        um ficheiro de apoio em JSON; False = escreve mesmo na BD do Aiven).
-    4. Correr no Spyder (F5) ou em terminal: python supercasa_scraper.py
+    5. Correr no Spyder (F5) ou em terminal: python supercasa_scraper.py
+
+  Como usar (automaticamente, todos os dias, no GitHub Actions)
+  ----------------------------------------------------------------
+    Ver o ficheiro .github/workflows/scraper_diario.yml e as instruções
+    passo a passo dadas na resposta de chat - resumidamente: criar um
+    repositório no GitHub, enviar estes ficheiros, definir o Secret
+    DATABASE_URL nas definições do repositório, e o workflow corre
+    sozinho todos os dias à hora marcada (ou manualmente, a qualquer
+    momento, pelo botão "Run workflow").
 
   Dependências (correr uma vez):
-    pip install selenium beautifulsoup4 lxml psycopg2-binary
+    pip install -r requirements.txt
 """
 
 import os
@@ -120,6 +144,7 @@ import random
 import logging
 from datetime import datetime
 
+from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -127,31 +152,61 @@ from selenium.webdriver.chrome.options import Options
 
 import psycopg2
 
+# Carrega variáveis de um ficheiro .env local, se existir, para as colocar
+# em os.environ (não tem qualquer efeito no GitHub Actions, onde as
+# variáveis já vêm definidas como "Secrets" - ver explicação no chat e
+# no ficheiro .env.example).
+load_dotenv()
+
 
 # =============================================================================
 #   CONFIGURAÇÃO  (ZONA DE AJUSTE — editar livremente conforme necessário)
 # =============================================================================
+#
+# A PARTIR DESTA VERSÃO, todas as definições abaixo podem ser substituídas
+# por variáveis de ambiente (sem precisar de tocar no código). Isto permite
+# usar EXATAMENTE o mesmo ficheiro tanto:
+#   - no teu computador Windows (Spyder), onde as variáveis vêm do ficheiro
+#     .env que crias localmente (ver .env.example) - os caminhos do Chrome
+#     abaixo ficam como estavam, como valor de reserva (fallback);
+#   - no GitHub Actions (Linux, na nuvem), onde as variáveis vêm dos
+#     "Secrets" do repositório e dos outputs da ação que instala o Chrome -
+#     nesse ambiente NÃO se usam os caminhos do Windows, claro.
+#
+# IMPORTANTE - SEGURANÇA: a password da base de dados JÁ NÃO está escrita
+# aqui em texto. Tem de vir sempre de uma variável de ambiente (local: pelo
+# ficheiro .env; no GitHub Actions: pelo Secret DATABASE_URL). Isto é
+# essencial porque este ficheiro passa a ficar guardado num repositório
+# Git - nunca se deve pôr uma password a sério dentro de código-fonte.
 
 # --- Caminho para o executável do Chrome e do Chromedriver -----------------
-# Normalmente não é preciso indicar nada aqui (o Selenium encontra e
-# descarrega tudo sozinho). Em Windows com processador ARM, o Selenium
-# Manager não consegue resolver isto sozinho - por isso os caminhos abaixo
-# já estão preenchidos manualmente.
-CHROME_BINARY = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-CHROMEDRIVER_PATH = r"C:\WebDriver\chromedriver.exe"
+# Em Linux (GitHub Actions) deixamos em None - o Selenium Manager resolve
+# sozinho sem problema nenhum nesse sistema (o problema só existe no
+# Windows com processador ARM, que é o teu caso local).
+CHROME_BINARY = os.environ.get("CHROME_BINARY", r"C:\Program Files\Google\Chrome\Application\chrome.exe")
+CHROMEDRIVER_PATH = os.environ.get("CHROMEDRIVER_PATH", r"C:\WebDriver\chromedriver.exe")
 
 # --- Versão do Chrome a anunciar no user-agent ------------------------------
-# Tem de corresponder à VERSÃO REAL do Chrome instalado (ver
-# chrome://version - usar só o primeiro número, ex: de "149.0.7827.115"
-# usar "149") E à versão do chromedriver indicada acima. As três coisas
-# (Chrome instalado, chromedriver, e este número) devem estar alinhadas.
-VERSAO_CHROME = "149"
+# Localmente, continua a ter de corresponder à versão real instalada (ver
+# chrome://version). No GitHub Actions, o workflow define este valor
+# automaticamente a partir da versão do Chrome que acabou de instalar -
+# nunca fica desatualizado.
+VERSAO_CHROME = os.environ.get("VERSAO_CHROME", "149")
 
 # --- Perfil de Chrome dedicado (igual ao princípio já usado no Idealista) --
-PASTA_PERFIL_CHROME = os.path.expanduser("~/Documents/supercasa_chrome_profile")
+# No GitHub Actions cada execução começa numa máquina nova e limpa, por
+# isso este perfil nunca persiste entre dias - não há problema, o desafio
+# da Cloudflare resolve-se sozinho em poucos segundos mesmo num perfil
+# novo (testado).
+PASTA_PERFIL_CHROME = os.environ.get(
+    "PASTA_PERFIL_CHROME",
+    os.path.expanduser("~/Documents/supercasa_chrome_profile"),
+)
 
 # --- Modo headless (sem janela) ---------------------------------------------
-MODO_HEADLESS = True
+# No GitHub Actions TEM de ser True (não há ecrã nenhum lá). Localmente
+# podes continuar a escolher.
+MODO_HEADLESS = os.environ.get("MODO_HEADLESS", "True").lower() == "true"
 
 # --- Modo teste --------------------------------------------------------------
 # True  -> não escreve na base de dados; grava um ficheiro
@@ -160,7 +215,8 @@ MODO_HEADLESS = True
 #          LIMITE_IMOVEIS_MODO_TESTE imóveis processados (ver abaixo).
 # False -> escreve mesmo na tabela `anuncios_imoveis` da base de dados Aiven,
 #          e percorre TUDO, sem limite.
-MODO_TESTE = False
+# MODO_TESTE = os.environ.get("MODO_TESTE", "False").lower() == "true"
+MODO_TESTE = "false"
 
 # --- Limite de imóveis a processar em modo de teste -------------------------
 # Só tem efeito quando MODO_TESTE = True. Ponha None para não ter limite
@@ -168,15 +224,11 @@ MODO_TESTE = False
 LIMITE_IMOVEIS_MODO_TESTE = 10
 
 # --- Ligação à base de dados PostgreSQL (Aiven) -----------------------------
-DATABASE_URL = os.environ.get("DATABASE_URL", "postgres://avnadmin:AVNS_eJVc6Y4ozdL6Y_CZDH3@urbaneco-db-migueljteixeira-bigdata.b.aivencloud.com:25973/defaultdb?sslmode=require")
-DB_CONFIG = {
-    "host": "urbaneco-db-migueljteixeira-bigdata.b.aivencloud.com",
-    "port": 25973,
-    "dbname": "defaultdb",
-    "user": "avnadmin",
-    "password": "AVNS_eJVc6Y4ozdL6Y_CZDH3",
-    "sslmode": "require",
-}
+# Sem valor de reserva (fallback) propositadamente - tem de vir SEMPRE do
+# .env local ou do Secret do GitHub. Se não estiver definida, o script
+# avisa e para, em vez de arriscar usar uma ligação errada.
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+
 
 # --- Identificação da fonte dos dados (ver coluna `fonte` na tabela) -------
 FONTE = "SuperCasa"
@@ -297,6 +349,15 @@ def criar_driver():
         opcoes.add_argument("--headless=new")
 
     opcoes.add_argument(f"--user-data-dir={PASTA_PERFIL_CHROME}")
+
+    # Em ambientes de CI/contentores (o GitHub Actions define sempre a
+    # variável de ambiente CI=true), o Chrome precisa destas duas flags
+    # extra para não recusar arrancar. No Windows local não têm efeito
+    # nenhum, por isso não há problema em deixá-las condicionais.
+    if os.environ.get("CI"):
+        opcoes.add_argument("--no-sandbox")
+        opcoes.add_argument("--disable-dev-shm-usage")
+
     opcoes.add_argument("--window-size=1366,900")
     opcoes.add_argument("--lang=pt-PT")
 
@@ -712,9 +773,13 @@ def montar_registo_imovel(resumo_listagem, detalhe, freguesia_cfg, concelho_cfg,
 # =============================================================================
 
 def obter_ligacao():
-    if DATABASE_URL:
-        return psycopg2.connect(DATABASE_URL, sslmode="require")
-    return psycopg2.connect(**DB_CONFIG)
+    if not DATABASE_URL:
+        raise RuntimeError(
+            "DATABASE_URL não está definida. Localmente: cria um ficheiro .env "
+            "com DATABASE_URL=... (ver .env.example). No GitHub Actions: define "
+            "o Secret chamado DATABASE_URL nas definições do repositório."
+        )
+    return psycopg2.connect(DATABASE_URL, sslmode="require")
 
 
 def inserir_se_novo(conn, dados):
@@ -762,16 +827,19 @@ def correr_scraper():
         log.info(f"Limite de imóveis em modo de teste: {limite}")
     log.info("=" * 70)
 
-    driver = criar_driver()
     conn = None
+    if not MODO_TESTE:
+        # Verificar a ligação primeiro, antes de gastar tempo a abrir o
+        # Chrome e a passar a Cloudflare - se faltar a DATABASE_URL é
+        # melhor falhar logo aqui, claramente, do que a meio do trabalho.
+        conn = obter_ligacao()
+        log.info("Ligação à base de dados estabelecida.")
+
+    driver = criar_driver()
     registos_para_ficheiro_teste = []
     total_processados = 0
 
     try:
-        if not MODO_TESTE:
-            conn = obter_ligacao()
-            log.info("Ligação à base de dados estabelecida.")
-
         total_novos, total_existentes = 0, 0
 
         for freguesia, concelho, estado, url_base in LINKS_PARA_SCRAPER:
@@ -827,7 +895,9 @@ def correr_scraper():
                     pausa_aleatoria()
 
         if MODO_TESTE:
-            caminho_ficheiro = os.path.expanduser("~/Desktop/supercasa_teste.json")
+            caminho_desktop = os.path.expanduser("~/Desktop")
+            pasta_destino = caminho_desktop if os.path.isdir(caminho_desktop) else "."
+            caminho_ficheiro = os.path.join(pasta_destino, "supercasa_teste.json")
             with open(caminho_ficheiro, "w", encoding="utf-8") as f:
                 json.dump(registos_para_ficheiro_teste, f, ensure_ascii=False, indent=2, default=str)
             log.info(f"\nFicheiro de teste gravado em: {caminho_ficheiro}")
