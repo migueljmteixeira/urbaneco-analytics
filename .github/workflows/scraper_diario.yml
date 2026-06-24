@@ -1,0 +1,76 @@
+name: Scraper diário SuperCasa
+
+# ---------------------------------------------------------------------------
+# Quando corre:
+#   - Todos os dias, à hora marcada em "schedule" (em UTC! Portugal está
+#     1h ou 2h adiantado dependendo da hora de verão/inverno - ajustar
+#     o "cron" abaixo se quiseres outra hora local).
+#   - Também podes correr manualmente a qualquer momento, na aba "Actions"
+#     do repositório no GitHub, botão "Run workflow" - e nesse caso podes
+#     escolher se queres correr em modo de teste ou não.
+# ---------------------------------------------------------------------------
+on:
+  schedule:
+    - cron: "0 5 * * *"   # 05:00 UTC = ~06:00 em Lisboa no inverno, ~07:00 no verão
+  workflow_dispatch:
+    inputs:
+      modo_teste:
+        description: "Correr em modo de teste (não escreve na base de dados)?"
+        type: boolean
+        default: true
+
+jobs:
+  scraper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90   # limite de segurança - cancela sozinho se algo ficar pendurado
+
+    steps:
+      - name: Obter o código do repositório
+        uses: actions/checkout@v4
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar Chrome + Chromedriver (versões sempre alinhadas)
+        id: chrome
+        uses: browser-actions/setup-chrome@v2
+        with:
+          chrome-version: stable
+          install-chromedriver: true
+
+      - name: Instalar dependências Python
+        run: pip install -r requirements.txt
+
+      - name: Correr o scraper
+        env:
+          # Segredo definido nas definições do repositório (Settings > Secrets
+          # and variables > Actions > New repository secret). Ver instruções
+          # na resposta de chat.
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+          # Caminhos e versão do Chrome - vêm diretamente da ação que o
+          # acabou de instalar no passo anterior, por isso NUNCA ficam
+          # desalinhados (ao contrário do que acontecia manualmente no
+          # Windows local).
+          CHROME_BINARY: ${{ steps.chrome.outputs.chrome-path }}
+          CHROMEDRIVER_PATH: ${{ steps.chrome.outputs.chromedriver-path }}
+          VERSAO_CHROME: ${{ steps.chrome.outputs.chrome-version }}
+
+          # Num runner do GitHub Actions nunca há ecrã - tem de ser headless.
+          MODO_HEADLESS: "True"
+
+          # Em execuções agendadas (todos os dias) corre sempre em modo
+          # produção. Em execuções manuais, usa a opção escolhida no botão
+          # "Run workflow" (por defeito, modo de teste, por segurança).
+          MODO_TESTE: ${{ github.event_name == 'workflow_dispatch' && inputs.modo_teste || 'false' }}
+        run: python supercasa_scraper.py
+
+      - name: Guardar ficheiro de teste (só quando corre em modo de teste)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.modo_teste }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: supercasa-teste
+          path: supercasa_teste.json
+          if-no-files-found: ignore
