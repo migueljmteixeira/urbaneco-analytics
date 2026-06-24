@@ -381,28 +381,64 @@ def criar_driver():
     return driver
 
 
-def ir_para_url_com_espera(driver, url):
-    """Navega para o URL e espera até a Cloudflare libertar a página."""
-    driver.get(url)
+def _esperar_cloudflare(driver):
+    """Espera até a Cloudflare libertar a página atual (ou esgotar o tempo)."""
     inicio = time.time()
-    titulo_inicial = driver.title
-    ciclos = 0
     while time.time() - inicio < SEGUNDOS_MAX_ESPERA_CLOUDFLARE:
         titulo = driver.title.lower()
         if "just a moment" not in titulo and "momento" not in titulo:
-            duracao = time.time() - inicio
-            if ciclos == 0:
-                # Resolveu-se logo ao primeiro segundo - vale a pena registar
-                # para diagnóstico, porque o normal (visto em testes) é
-                # demorar uns bons segundos da primeira vez numa sessão nova.
-                log.info(
-                    f"    [DIAGNÓSTICO] Página \"resolvida\" em {duracao:.1f}s "
-                    f"(título inicial: {titulo_inicial!r} -> título final: {driver.title!r})"
-                )
             return True
-        ciclos += 1
         time.sleep(1)
-    log.warning(f"Desafio da Cloudflare não resolveu a tempo em: {url}")
+    return False
+
+
+def ir_para_url_com_espera(driver, url, tentativas=3):
+    """
+    Navega para o URL e espera que a Cloudflare liberte a página.
+
+    NOVO (confirmado com testes reais em 24/06): para além da Cloudflare,
+    o próprio site por vezes devolve, durante alguns segundos, uma página
+    minúscula titulada "Site Offline" (~1800 bytes) - uma instabilidade
+    temporária do servidor do Supercasa (ou da camada da Cloudflare em
+    frente dele), sem relação com bloqueio anti-bot. Quando isso acontece,
+    tentamos de novo (até `tentativas` vezes) com uma pequena pausa, em
+    vez de desistir logo e assumir "sem anúncios".
+
+    ZONA DE AJUSTE: se no futuro aparecerem outras páginas de erro
+    semelhantes com títulos diferentes, acrescentar aqui à lista
+    TITULOS_DE_FALHA_CONHECIDOS.
+    """
+    TITULOS_DE_FALHA_CONHECIDOS = ["site offline"]
+    TAMANHO_MINIMO_PAGINA_VALIDA = 5000  # bytes - uma página real do Supercasa tem sempre muito mais do que isto
+
+    for tentativa in range(1, tentativas + 1):
+        driver.get(url)
+
+        if not _esperar_cloudflare(driver):
+            log.warning(f"  Desafio da Cloudflare não resolveu a tempo (tentativa {tentativa}/{tentativas}): {url}")
+            time.sleep(random.uniform(3, 6))
+            continue
+
+        html = driver.page_source
+        titulo_atual = driver.title.lower()
+
+        pagina_parece_falhada = (
+            any(t in titulo_atual for t in TITULOS_DE_FALHA_CONHECIDOS)
+            or len(html) < TAMANHO_MINIMO_PAGINA_VALIDA
+        )
+
+        if pagina_parece_falhada:
+            log.warning(
+                f"  Página com sinais de falha temporária do site "
+                f"(título={driver.title!r}, tamanho={len(html)} bytes) - "
+                f"a tentar de novo (tentativa {tentativa}/{tentativas})."
+            )
+            time.sleep(random.uniform(3, 6))
+            continue
+
+        return True
+
+    log.warning(f"  Não foi possível obter uma página válida após {tentativas} tentativas: {url}")
     return False
 
 
