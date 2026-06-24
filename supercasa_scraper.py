@@ -112,6 +112,25 @@
           repositório, e o workflow injeta-a automaticamente - não precisas
           de ficheiro .env nenhum lá.
 
+  11) Login no Supercasa (opcional, mas ativado por defeito)
+      -----------------------------------------------------------------------
+      A pedido do Miguel: o scraper pode iniciar sessão no Supercasa antes
+      de começar a percorrer os links (ver FAZER_LOGIN, SUPERCASA_EMAIL,
+      SUPERCASA_PASSWORD na configuração, e a função fazer_login()).
+      Hipótese a testar: uma sessão iniciada pode tornar o site mais
+      estável/confiável para o scraper.
+      NOTA HONESTA: a instabilidade "Site Offline" que motivou este pedido
+      já tinha sido diagnosticada e corrigida de forma independente
+      (tentativas automáticas em ir_para_url_com_espera - ver ponto 8 e a
+      conversa). Não há garantia de que o login resolva especificamente
+      esse problema, mas não tem contrapartidas conhecidas, por isso fica
+      ativado. Se o login falhar por qualquer motivo (ex: o site mudou a
+      página), o scraper regista um aviso e CONTINUA sem sessão iniciada -
+      nunca para por causa disto.
+      SEGURANÇA: estas são credenciais pessoais (email/password reais),
+      não só dados do projeto - nunca escrever em texto no código, sempre
+      por variável de ambiente (.env local / Secret do GitHub).
+
   Como usar (no teu computador, Windows/Spyder)
   ----------------------------------------------
     1. Criar primeiro a tabela na base de dados (correr o ficheiro
@@ -149,6 +168,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 
 import psycopg2
 
@@ -231,6 +251,22 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 # --- Identificação da fonte dos dados (ver coluna `fonte` na tabela) -------
 FONTE = "SuperCasa"
+
+# --- Login no Supercasa (opcional) ------------------------------------------
+# Ideia do Miguel: o site pode comportar-se de forma mais estável com uma
+# sessão iniciada. Mesmo que isto não resolva por si só a instabilidade
+# "Site Offline" (que já tem uma correção própria - tentativas automáticas,
+# ver ir_para_url_com_espera), não tem contrapartidas conhecidas, por isso
+# fica ativado.
+#
+# IMPORTANTE - SEGURANÇA: tal como a DATABASE_URL, estas credenciais NUNCA
+# devem ser escritas aqui em texto - o repositório é público, e estas são
+# credenciais pessoais (email/password), não só dados do projeto. Vêm
+# sempre de variáveis de ambiente (.env local / Secrets do GitHub: ver
+# SUPERCASA_EMAIL e SUPERCASA_PASSWORD).
+FAZER_LOGIN = os.environ.get("FAZER_LOGIN", "True").lower() == "true"
+SUPERCASA_EMAIL = os.environ.get("SUPERCASA_EMAIL", "")
+SUPERCASA_PASSWORD = os.environ.get("SUPERCASA_PASSWORD", "")
 
 # --- Lista de páginas a percorrer -------------------------------------------
 # Estrutura: cada entrada é (freguesia, concelho, estado, url).
@@ -444,6 +480,75 @@ def ir_para_url_com_espera(driver, url, tentativas=3):
 
 def pausa_aleatoria():
     time.sleep(random.uniform(ESPERA_MIN_ENTRE_PEDIDOS, ESPERA_MAX_ENTRE_PEDIDOS))
+
+
+def fazer_login(driver):
+    """
+    Inicia sessão no Supercasa com o email e password configurados
+    (SUPERCASA_EMAIL / SUPERCASA_PASSWORD), antes de começar o scraping.
+
+    Passos (confirmados manualmente a funcionar, em 24/06):
+      1. Clicar em "Iniciar sessão" (#loginPop)
+      2. Clicar em "Continuar com email"
+      3. Escrever o email, clicar em "Continuar"
+      4. Escrever a password, marcar "Recordar os meus dados", clicar em
+         "Continuar"
+
+    Se qualquer passo falhar (ex: o site mudou a estrutura da página, ou
+    as credenciais não estão configuradas), regista um aviso e o scraper
+    CONTINUA sem sessão iniciada, em vez de parar - já confirmámos que o
+    scraper funciona bem sem login, por isso isto é só um extra, nunca um
+    requisito.
+
+    ZONA DE AJUSTE: se o Supercasa alterar a página de login, os
+    seletores a corrigir são os usados nos vários `find_element` abaixo.
+    """
+    if not SUPERCASA_EMAIL or not SUPERCASA_PASSWORD:
+        log.info("SUPERCASA_EMAIL / SUPERCASA_PASSWORD não configurados - a continuar sem login.")
+        return False
+
+    try:
+        log.info("A iniciar sessão no Supercasa...")
+
+        if not ir_para_url_com_espera(driver, "https://supercasa.pt/"):
+            log.warning("Não foi possível abrir a página inicial para login - a continuar sem sessão.")
+            return False
+
+        driver.find_element(By.ID, "loginPop").click()
+        time.sleep(2)
+
+        driver.find_element(By.CSS_SELECTOR, 'button[data-modal-target="modal-user-login-email"]').click()
+        time.sleep(2)
+
+        driver.find_element(By.CSS_SELECTOR, 'input[name="Email_continue"]').send_keys(SUPERCASA_EMAIL)
+        time.sleep(1)
+        driver.find_element(By.CSS_SELECTOR, 'button[data-modal-target="modal-user-login-email-pass"]').click()
+        time.sleep(2)
+
+        modal_password = driver.find_element(By.ID, "modal-user-login-email-pass")
+        modal_password.find_element(By.CSS_SELECTOR, 'input[name="Password"]').send_keys(SUPERCASA_PASSWORD)
+
+        checkbox_recordar = modal_password.find_element(By.CSS_SELECTOR, 'input[type="checkbox"]')
+        if not checkbox_recordar.is_selected():
+            checkbox_recordar.click()
+
+        time.sleep(1)
+        modal_password.find_element(By.CSS_SELECTOR, 'button[type="submit"]').click()
+        time.sleep(4)
+
+        # Confirmação: depois de login com sucesso, o menu passa a ter a
+        # opção "Sair" (logout), que não existe para visitantes anónimos.
+        pagina_em_minusculas = driver.page_source.lower()
+        if "logout" in pagina_em_minusculas or ">sair<" in pagina_em_minusculas:
+            log.info("Login efetuado com sucesso.")
+            return True
+
+        log.warning("Não foi possível confirmar que o login funcionou - a continuar mesmo assim.")
+        return False
+
+    except Exception as e:
+        log.warning(f"Falha ao tentar fazer login no Supercasa ({e}) - a continuar sem sessão iniciada.")
+        return False
 
 
 # =============================================================================
@@ -896,6 +1001,10 @@ def correr_scraper():
         log.info("Ligação à base de dados estabelecida.")
 
     driver = criar_driver()
+
+    if FAZER_LOGIN:
+        fazer_login(driver)
+
     registos_para_ficheiro_teste = []
     total_processados = 0
 
