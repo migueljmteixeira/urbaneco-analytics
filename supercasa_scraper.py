@@ -216,6 +216,7 @@ MODO_HEADLESS = os.environ.get("MODO_HEADLESS", "True").lower() == "true"
 # False -> escreve mesmo na tabela `anuncios_imoveis` da base de dados Aiven,
 #          e percorre TUDO, sem limite.
 MODO_TESTE = os.environ.get("MODO_TESTE", "False").lower() == "true"
+MODO_TESTE = "false"
 
 # --- Limite de imóveis a processar em modo de teste -------------------------
 # Só tem efeito quando MODO_TESTE = True. Ponha None para não ter limite
