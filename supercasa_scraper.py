@@ -355,12 +355,12 @@ LINKS_PARA_SCRAPER = [
 ]
 
 # --- Tempos de espera e "arrefecimento" (anti-bot) --------------------------
-ESPERA_MIN_ENTRE_PEDIDOS = 8.0
-ESPERA_MAX_ENTRE_PEDIDOS = 18.0
-PEDIDOS_ANTES_DE_ARREFECER = 25
+ESPERA_MIN_ENTRE_PEDIDOS = 3.0
+ESPERA_MAX_ENTRE_PEDIDOS = 7.0
+PEDIDOS_ANTES_DE_ARREFECER = 15
 PAUSA_DE_ARREFECIMENTO = (20, 40)
 MAX_PAGINAS_POR_LINK = 40
-SEGUNDOS_MAX_ESPERA_CLOUDFLARE = 32
+SEGUNDOS_MAX_ESPERA_CLOUDFLARE = 25
 
 
 logging.basicConfig(
@@ -437,7 +437,7 @@ def ir_para_url_com_espera(driver, url, tentativas=3):
     minúscula titulada "Site Offline" (~1800 bytes) - uma instabilidade
     temporária do servidor do Supercasa (ou da camada da Cloudflare em
     frente dele), sem relação com bloqueio anti-bot. Quando isso acontece,
-    tentamos de novo (até `tentativas` vezes) com uma pequena pausa, em
+    tentamos de novo (até `tentativas` vezes) com uma pausa de 10-15s, em
     vez de desistir logo e assumir "sem anúncios".
 
     ZONA DE AJUSTE: se no futuro aparecerem outras páginas de erro
@@ -452,7 +452,7 @@ def ir_para_url_com_espera(driver, url, tentativas=3):
 
         if not _esperar_cloudflare(driver):
             log.warning(f"  Desafio da Cloudflare não resolveu a tempo (tentativa {tentativa}/{tentativas}): {url}")
-            time.sleep(random.uniform(3, 6))
+            time.sleep(random.uniform(10, 15))
             continue
 
         html = driver.page_source
@@ -469,7 +469,7 @@ def ir_para_url_com_espera(driver, url, tentativas=3):
                 f"(título={driver.title!r}, tamanho={len(html)} bytes) - "
                 f"a tentar de novo (tentativa {tentativa}/{tentativas})."
             )
-            time.sleep(random.uniform(3, 6))
+            time.sleep(random.uniform(10, 15))
             continue
 
         return True
