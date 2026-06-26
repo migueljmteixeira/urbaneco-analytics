@@ -5,10 +5,10 @@
 
 // Ordem das classes energéticas, da PIOR para a MELHOR - usada em
 // vários gráficos para manter a ordem e as cores consistentes.
-const ORDEM_CLASSES = ["NT", "G", "F", "E", "D", "C", "B", "B-", "A", "A+"];
+const ORDEM_CLASSES = ["NT", "G", "F", "E", "D", "C", "B", "A", "A+"];
 
 const CORES_CLASSES = {
-  "A+": "#1B7F3F", "A": "#2FBE6E", "B": "#8BD448", "B-": "#C9D448",
+  "A+": "#1B7F3F", "A": "#2FBE6E", "B": "#8BD448",
   "C": "#F2C94C", "D": "#F2A93B", "E": "#E8743B", "F": "#E5484D",
   "G": "#B83246", "NT": "#5C6760",
 };
