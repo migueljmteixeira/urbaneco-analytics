@@ -20,6 +20,7 @@
       <a href="#inicio">Início</a>
       <a href="#dados-mercado">Mercado</a>
       <a href="#indice-verde">Índice Verde</a>
+      <a href="#servicos-freguesia">Serviços</a>
       <a href="#evi">EVI</a>
       <a href="#premio-verde">Prémio Verde</a>
       <a href="#oportunidades">Oportunidades</a>
@@ -109,90 +110,241 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- SECÇÕES 2-9 — placeholders, em construção                     -->
+<!-- SECÇÃO 2 — ÍNDICE VERDE                                       -->
 <!-- ============================================================ -->
 <section class="section" id="indice-verde">
   <div class="container">
     <div class="section-head">
       <div class="eyebrow">02 · Índice de Sustentabilidade Local</div>
       <h2>Índice Verde, por freguesia</h2>
-      <p>Ambiente Verde, Mobilidade Sustentável e Equipamentos Sociais — agregados pelo método de Borda.</p>
+      <p>Ambiente Verde, Mobilidade Sustentável e Equipamentos Sociais — agregados pelo método de Borda, numa escala de 0 a 100.</p>
     </div>
-    <div class="placeholder">Em construção — próxima fase</div>
+    <div class="grid grid-2">
+      <div class="chart-card">
+        <h3>Ranking geral</h3>
+        <span class="card-sub">Índice Verde (0-100), por freguesia</span>
+        <div id="grafico-iv-ranking"></div>
+      </div>
+      <div class="chart-card">
+        <h3>As 3 dimensões</h3>
+        <span class="card-sub">Ambiente Verde · Mobilidade Sustentável · Equipamentos Sociais</span>
+        <div id="grafico-iv-dimensoes"></div>
+      </div>
+    </div>
   </div>
 </section>
 
+<!-- ============================================================ -->
+<!-- SECÇÃO 3 — SERVIÇOS E EQUIPAMENTOS POR FREGUESIA              -->
+<!-- ============================================================ -->
+<section class="section" id="servicos-freguesia">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">03 · Informação de Serviços por Freguesia</div>
+      <h2>O detalhe por trás do Índice Verde</h2>
+      <p>Os 8 indicadores que compõem o Índice Verde, freguesia a freguesia.</p>
+    </div>
+    <div class="grid grid-2">
+      <div class="chart-card"><h3>Espaços Verdes</h3><span class="card-sub">km / km²</span><div id="grafico-servico-0"></div></div>
+      <div class="chart-card"><h3>Ciclovias</h3><span class="card-sub">km / km²</span><div id="grafico-servico-1"></div></div>
+      <div class="chart-card"><h3>Carregadores EV</h3><span class="card-sub">EV / 1k hab.</span><div id="grafico-servico-2"></div></div>
+      <div class="chart-card"><h3>Estações de Metro</h3><span class="card-sub">Metro / 1k hab.</span><div id="grafico-servico-3"></div></div>
+      <div class="chart-card"><h3>Cuidados de Saúde Primários</h3><span class="card-sub">1k hab.</span><div id="grafico-servico-4"></div></div>
+      <div class="chart-card"><h3>Equipamentos Desportivos</h3><span class="card-sub">Equip. / km²</span><div id="grafico-servico-5"></div></div>
+      <div class="chart-card"><h3>Escolas Básicas</h3><span class="card-sub">Esc. / 1k hab.</span><div id="grafico-servico-6"></div></div>
+      <div class="chart-card"><h3>Escolas Secundárias</h3><span class="card-sub">Esc. / 1k hab.</span><div id="grafico-servico-7"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECÇÃO 4 — EVI                                                -->
+<!-- ============================================================ -->
 <section class="section" id="evi">
   <div class="container">
     <div class="section-head">
-      <div class="eyebrow">03 · Energy Value Index</div>
+      <div class="eyebrow">04 · Energy Value Index</div>
       <h2>EVI: como cada imóvel é pontuado</h2>
-      <p>Explicação do cálculo, Price Score, Energy Score, valor médio, e o Top 20 imóveis com melhor EVI.</p>
+      <p>EVI = (Price Score × 0,5 + Energy Score × 0,3 + Location Score × 0,3) × 20</p>
     </div>
-    <div class="placeholder">Em construção — próxima fase</div>
+
+    <div class="evi-explain">
+      <div class="step"><div class="n">PRICE SCORE</div><div class="t">É um bom preço?</div><div class="d">Desvio do €/m² face à mediana do segmento homólogo.</div></div>
+      <div class="step"><div class="n">ENERGY SCORE</div><div class="t">É eficiente?</div><div class="d">Peso da classe energética certificada, de 0 a 5.</div></div>
+      <div class="step"><div class="n">LOCATION SCORE</div><div class="t">É bem localizado?</div><div class="d">Índice Verde da freguesia, na mesma escala.</div></div>
+    </div>
+
+    <div class="mini-stat-row">
+      <div class="mini-stat"><span class="v" id="evi-stat-medio">0</span><span class="l">EVI médio</span></div>
+      <div class="mini-stat"><span class="v" id="evi-stat-acima50">0</span><span class="l">Imóveis EVI &gt; 50</span></div>
+      <div class="mini-stat"><span class="v" id="evi-stat-m2">0 €</span><span class="l">Média de €/m²</span></div>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom:18px;">
+      <div class="chart-card"><h3>EVI vs €/m²</h3><span class="card-sub">Cada ponto é um imóvel, colorido pela categoria EVI</span><div id="grafico-evi-scatter"></div></div>
+      <div class="chart-card"><h3>Eficiência Energética vs Preço</h3><span class="card-sub">Energy Score médio vs €/m² médio, por classe</span><div id="grafico-eficiencia-scatter"></div></div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Top 20 · Melhor EVI</h3>
+      <div class="data-table-wrap">
+        <table class="data-table" id="tabela-top20">
+          <thead><tr><th>#</th><th>Freguesia</th><th>Imóvel</th><th>Classe</th><th>€/m²</th><th>EVI</th><th>Categoria</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </section>
 
+<!-- ============================================================ -->
+<!-- SECÇÃO 5 — PRÉMIO VERDE                                       -->
+<!-- ============================================================ -->
 <section class="section" id="premio-verde">
   <div class="container">
     <div class="section-head">
-      <div class="eyebrow">04 · Prémio Verde</div>
-      <h2>O que vale, em euros, subir de classe energética</h2>
+      <div class="eyebrow">05 · Prémio Verde</div>
+      <h2>O que vale, em euros por m², subir de classe energética</h2>
     </div>
-    <div class="placeholder">Em construção — próxima fase</div>
+    <div class="filter-row">
+      <div class="filter-field"><label>Tipo de imóvel</label>
+        <select id="pv-filtro-tipo"><option value="Apartamento">Apartamento</option><option value="Moradia">Moradia</option></select>
+      </div>
+      <div class="filter-field"><label>Tipologia</label>
+        <select id="pv-filtro-tipologia"><option>T0</option><option>T1</option><option selected>T2</option><option>T3</option><option>T4+</option></select>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Prémio por classe energética</h3>
+      <span class="card-sub">Face à classe imediatamente pior (G é a base, prémio sempre 0)</span>
+      <div id="grafico-premio-verde"></div>
+    </div>
   </div>
 </section>
 
+<!-- ============================================================ -->
+<!-- SECÇÃO 6 — OPORTUNIDADES POR FREGUESIA                        -->
+<!-- ============================================================ -->
 <section class="section" id="oportunidades">
   <div class="container">
     <div class="section-head">
-      <div class="eyebrow">05 · Oportunidades</div>
+      <div class="eyebrow">06 · Oportunidades</div>
       <h2>Oportunidades por freguesia</h2>
+      <p>Cruzamento do Índice Verde com o Energy Gap (% de stock energeticamente ineficiente).</p>
     </div>
-    <div class="placeholder">Em construção — próxima fase</div>
+    <div class="chart-card" style="margin-bottom:18px;">
+      <h3>Índice Verde vs Energy Gap</h3>
+      <span class="card-sub">% de imóveis em classes C a G, por freguesia</span>
+      <div id="grafico-oportunidades"></div>
+    </div>
+    <div class="card" id="oportunidade-callout" style="font-size:14.5px; color:var(--ink-dim); line-height:1.6;"></div>
   </div>
 </section>
 
+<!-- ============================================================ -->
+<!-- SECÇÃO 7 — PESQUISA DE IMÓVEIS                                -->
+<!-- ============================================================ -->
 <section class="section" id="pesquisa">
   <div class="container">
     <div class="section-head">
-      <div class="eyebrow">06 · Pesquisa</div>
+      <div class="eyebrow">07 · Pesquisa</div>
       <h2>Site de pesquisa de imóveis</h2>
-      <p>Filtra por preço, freguesia, tipologia, tipo, classe energética, categoria e classificação EVI.</p>
+      <p>Filtra por preço, freguesia, tipologia, tipo, classe energética, eficiência, categoria e classificação EVI.</p>
     </div>
-    <div class="placeholder">Em construção — próxima fase</div>
+    <div class="filter-row">
+      <div class="filter-field"><label>Freguesia</label><select id="pq-freguesia"><option value="">Todas</option></select></div>
+      <div class="filter-field"><label>Tipo</label><select id="pq-tipo"><option value="">Todos</option></select></div>
+      <div class="filter-field"><label>Tipologia</label><select id="pq-tipologia"><option value="">Todas</option></select></div>
+      <div class="filter-field"><label>Classe energética</label><select id="pq-classe"><option value="">Todas</option></select></div>
+      <div class="filter-field"><label>Eficiência</label><select id="pq-energy-desc"><option value="">Todas</option></select></div>
+      <div class="filter-field"><label>Categoria EVI</label><select id="pq-categoria"><option value="">Todas</option></select></div>
+      <div class="filter-field"><label>Classificação</label><select id="pq-classificacao"><option value="">Todas</option></select></div>
+      <div class="filter-field"><label>Preço mín. (€)</label><input type="number" id="pq-preco-min" placeholder="0"></div>
+      <div class="filter-field"><label>Preço máx. (€)</label><input type="number" id="pq-preco-max" placeholder="999999"></div>
+      <button class="filter-reset" id="pq-reset">Limpar filtros</button>
+    </div>
+    <div class="results-count" id="pq-resultados-count"></div>
+    <div class="data-table-wrap">
+      <table class="data-table" id="tabela-pesquisa">
+        <thead><tr><th>Freguesia</th><th>Tipo</th><th>Tipologia</th><th>Estado</th><th>Classe</th><th>Preço</th><th>€/m²</th><th>EVI</th><th>Categoria</th><th>Classificação</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 </section>
 
+<!-- ============================================================ -->
+<!-- SECÇÃO 8 — MELHORES NEGÓCIOS                                  -->
+<!-- ============================================================ -->
 <section class="section" id="melhores-negocios">
   <div class="container">
     <div class="section-head">
-      <div class="eyebrow">07 · Melhores Negócios</div>
+      <div class="eyebrow">08 · Melhores Negócios</div>
       <h2>Top 5 negócios, por freguesia</h2>
+      <p>Os imóveis com melhor EVI de cada freguesia.</p>
     </div>
-    <div class="placeholder">Em construção — próxima fase</div>
+    <div class="pill-row" id="mn-pills"></div>
+    <div class="grid grid-3" id="mn-cards"></div>
   </div>
 </section>
 
+<!-- ============================================================ -->
+<!-- SECÇÃO 9 — ESCADA DE VALOR DA SUSTENTABILIDADE                -->
+<!-- ============================================================ -->
 <section class="section" id="escada-valor">
   <div class="container">
     <div class="section-head">
-      <div class="eyebrow">08 · Escada de Valor da Sustentabilidade</div>
+      <div class="eyebrow">09 · Escada de Valor da Sustentabilidade</div>
       <h2>Calculadora de prémios energéticos</h2>
       <p>Escolhe uma tipologia e um tipo, e compara o prémio entre duas classes energéticas.</p>
     </div>
-    <div class="placeholder">Em construção — próxima fase</div>
+    <div class="ladder-controls">
+      <div class="filter-field"><label>Tipo</label><select id="ev-tipo"><option value="Apartamento">Apartamento</option><option value="Moradia">Moradia</option></select></div>
+      <div class="filter-field"><label>Tipologia</label><select id="ev-tipologia"><option>T0</option><option>T1</option><option selected>T2</option><option>T3</option><option>T4+</option></select></div>
+      <div class="filter-field"><label>De</label><select id="ev-origem"></select></div>
+      <div class="filter-field"><label>Para</label><select id="ev-destino"></select></div>
+      <div class="filter-field"><label>Área (m², opcional)</label><input type="number" id="ev-area" placeholder="ex: 80"></div>
+    </div>
+    <div class="ladder-result">
+      <div><div class="big-num" id="ev-resultado-m2">—</div><div class="lbl">Prémio por m²</div></div>
+      <div><div class="big-num" id="ev-resultado-total">—</div><div class="lbl">Prémio total estimado</div></div>
+      <div style="font-size:12.5px; color:var(--ink-faint); max-width:240px;" id="ev-aviso"></div>
+    </div>
+    <div class="chart-card">
+      <h3>Mediana €/m² por classe energética</h3>
+      <span class="card-sub">Intervalo selecionado destacado a verde</span>
+      <div id="grafico-escada"></div>
+    </div>
   </div>
 </section>
 
+<!-- ============================================================ -->
+<!-- SECÇÃO 10 — HEATMAPS                                          -->
+<!-- ============================================================ -->
 <section class="section" id="heatmaps">
   <div class="container">
     <div class="section-head">
-      <div class="eyebrow">09 · Heatmaps</div>
+      <div class="eyebrow">10 · Heatmaps</div>
       <h2>Mapas de calor</h2>
-      <p>Medianas por segmento, e prémio energético — visualizados como heatmap.</p>
+      <p>Medianas por segmento, e prémio energético.</p>
     </div>
-    <div class="placeholder">Em construção — próxima fase</div>
+
+    <div class="filter-row">
+      <div class="filter-field"><label>Tipo</label><select id="hm-tipo"><option value="Apartamento">Apartamento</option><option value="Moradia">Moradia</option></select></div>
+      <div class="filter-field"><label>Estado</label><select id="hm-estado"><option value="Novo">Novo</option><option value="Usado" selected>Usado</option><option value="Para Recuperar">Para Recuperar</option><option value="Em Construção">Em Construção</option></select></div>
+    </div>
+    <div class="chart-card" style="margin-bottom:24px;">
+      <h3>Mediana €/m² — Freguesia × Tipologia</h3>
+      <div class="heatmap-wrap"><div id="heatmap-medianas"></div></div>
+    </div>
+
+    <div class="filter-row">
+      <div class="filter-field"><label>Tipo</label><select id="hm-premio-tipo"><option value="Apartamento">Apartamento</option><option value="Moradia">Moradia</option></select></div>
+    </div>
+    <div class="chart-card">
+      <h3>Prémio Energético — Classe × Tipologia</h3>
+      <div class="heatmap-wrap"><div id="heatmap-premio"></div></div>
+    </div>
   </div>
 </section>
 
@@ -204,5 +356,14 @@
 
 <script src="js/main.js"></script>
 <script src="js/section1.js"></script>
+<script src="js/section2.js"></script>
+<script src="js/section3.js"></script>
+<script src="js/section4.js"></script>
+<script src="js/section5.js"></script>
+<script src="js/section6.js"></script>
+<script src="js/section7.js"></script>
+<script src="js/section8.js"></script>
+<script src="js/section9.js"></script>
+<script src="js/section10.js"></script>
 </body>
 </html>
