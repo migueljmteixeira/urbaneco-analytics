@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UrbanEco Analytics — Dashboard</title>
+<meta name="description" content="Dashboard interativo do UrbanEco Analytics: mercado imobiliário, eficiência energética e sustentabilidade no Porto.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-logo">Urban<em>Eco</em>.Dashboard</div>
+    <div class="nav-links">
+      <a href="#inicio">Início</a>
+      <a href="#dados-mercado">Mercado</a>
+      <a href="#indice-verde">Índice Verde</a>
+      <a href="#evi">EVI</a>
+      <a href="#premio-verde">Prémio Verde</a>
+      <a href="#oportunidades">Oportunidades</a>
+      <a href="#pesquisa">Pesquisa</a>
+      <a href="#melhores-negocios">Melhores Negócios</a>
+      <a href="#escada-valor">Escada de Valor</a>
+      <a href="#heatmaps">Heatmaps</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================================ -->
+<!-- PÁGINA INICIAL                                                -->
+<!-- ============================================================ -->
+<header class="hero" id="inicio">
+  <div class="glow"></div>
+  <div class="container">
+    <div class="eyebrow">ODS 11 · ISEP · Pós-Graduação Big Data · 2026</div>
+    <h1 class="headline">Dashboard <em>UrbanEco</em> Analytics</h1>
+    <p class="sub">
+      Explora, ao vivo, os dados reais por trás do Energy Value Index: o mercado
+      imobiliário do Porto, a eficiência energética dos imóveis, e o índice de
+      sustentabilidade por freguesia. Tudo calculado a partir da base de dados
+      do projeto — não são números ilustrativos.
+    </p>
+    <div class="hero-actions">
+      <a href="#dados-mercado" class="btn btn-primary">Explorar os dados →</a>
+      <a href="https://github.com/migueljmteixeira/urbaneco-analytics" class="btn btn-secondary">Ver repositório no GitHub ↗</a>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><span class="num" id="stat-total-imoveis">0</span><span class="lbl">Imóveis na base de dados</span></div>
+      <div class="stat"><span class="num" id="stat-freguesias">0</span><span class="lbl">Freguesias do Porto</span></div>
+      <div class="stat"><span class="num" id="stat-evi-medio">0</span><span class="lbl">EVI médio /100</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<!-- SECÇÃO 1 — DADOS DO MERCADO                                   -->
+<!-- ============================================================ -->
+<section class="section" id="dados-mercado">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">01 · Dados do Mercado</div>
+      <h2>O mercado imobiliário do Porto, em números</h2>
+      <p>Visão geral do stock de imóveis recolhido — por tipologia, e por classe energética.</p>
+    </div>
+
+    <div class="grid grid-4" style="margin-bottom:18px;">
+      <div class="card stat-card">
+        <span class="num" id="stat-apartamentos">0</span>
+        <span class="lbl">Apartamentos</span>
+      </div>
+      <div class="card stat-card">
+        <span class="num" id="stat-moradias">0</span>
+        <span class="lbl">Moradias</span>
+      </div>
+      <div class="card stat-card">
+        <span class="num" id="stat-total-imoveis-2">0</span>
+        <span class="lbl">Total de imóveis</span>
+      </div>
+      <div class="card stat-card">
+        <span class="num" id="stat-evi-medio-2">0</span>
+        <span class="lbl">EVI médio /100</span>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom:18px;">
+      <div class="chart-card">
+        <h3>Imóveis por tipologia</h3>
+        <span class="card-sub">Contagem, separada por Apartamento / Moradia</span>
+        <div id="grafico-tipologia"></div>
+      </div>
+      <div class="chart-card">
+        <h3>Imóveis por classe energética</h3>
+        <span class="card-sub">Stock total, todas as freguesias</span>
+        <div id="grafico-classe-energetica"></div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Mediana €/m² por classe energética e tipologia</h3>
+      <span class="card-sub">Apartamentos · uma linha por tipologia (T0 a T4+) · classes com 4 ou mais imóveis na amostra</span>
+      <div id="grafico-mediana-classe"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECÇÕES 2-9 — placeholders, em construção                     -->
+<!-- ============================================================ -->
+<section class="section" id="indice-verde">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">02 · Índice de Sustentabilidade Local</div>
+      <h2>Índice Verde, por freguesia</h2>
+      <p>Ambiente Verde, Mobilidade Sustentável e Equipamentos Sociais — agregados pelo método de Borda.</p>
+    </div>
+    <div class="placeholder">Em construção — próxima fase</div>
+  </div>
+</section>
+
+<section class="section" id="evi">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">03 · Energy Value Index</div>
+      <h2>EVI: como cada imóvel é pontuado</h2>
+      <p>Explicação do cálculo, Price Score, Energy Score, valor médio, e o Top 20 imóveis com melhor EVI.</p>
+    </div>
+    <div class="placeholder">Em construção — próxima fase</div>
+  </div>
+</section>
+
+<section class="section" id="premio-verde">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">04 · Prémio Verde</div>
+      <h2>O que vale, em euros, subir de classe energética</h2>
+    </div>
+    <div class="placeholder">Em construção — próxima fase</div>
+  </div>
+</section>
+
+<section class="section" id="oportunidades">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">05 · Oportunidades</div>
+      <h2>Oportunidades por freguesia</h2>
+    </div>
+    <div class="placeholder">Em construção — próxima fase</div>
+  </div>
+</section>
+
+<section class="section" id="pesquisa">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">06 · Pesquisa</div>
+      <h2>Site de pesquisa de imóveis</h2>
+      <p>Filtra por preço, freguesia, tipologia, tipo, classe energética, categoria e classificação EVI.</p>
+    </div>
+    <div class="placeholder">Em construção — próxima fase</div>
+  </div>
+</section>
+
+<section class="section" id="melhores-negocios">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">07 · Melhores Negócios</div>
+      <h2>Top 5 negócios, por freguesia</h2>
+    </div>
+    <div class="placeholder">Em construção — próxima fase</div>
+  </div>
+</section>
+
+<section class="section" id="escada-valor">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">08 · Escada de Valor da Sustentabilidade</div>
+      <h2>Calculadora de prémios energéticos</h2>
+      <p>Escolhe uma tipologia e um tipo, e compara o prémio entre duas classes energéticas.</p>
+    </div>
+    <div class="placeholder">Em construção — próxima fase</div>
+  </div>
+</section>
+
+<section class="section" id="heatmaps">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">09 · Heatmaps</div>
+      <h2>Mapas de calor</h2>
+      <p>Medianas por segmento, e prémio energético — visualizados como heatmap.</p>
+    </div>
+    <div class="placeholder">Em construção — próxima fase</div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>UrbanEco Analytics · ISEP Pós-Graduação Big Data · ODS 11 — Cidades e Comunidades Sustentáveis · Dados atualizados automaticamente</p>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script src="js/section1.js"></script>
+</body>
+</html>
