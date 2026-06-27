@@ -1352,7 +1352,7 @@
     <div class="evi-formula-box fi">
       <div class="formula-label">// Fórmula EVI — Energy Value Index (escala 1–10)</div>
       <div class="formula-eq">
-        <span class="eq-g">EVI</span><span class="eq-d"> = (</span><span class="eq-g">energy_score × 0.55</span><span class="eq-d"> + </span><span class="eq-g">price_score × 0.45</span><span class="eq-d">) × 9 + 1</span>
+        <span class="eq-g">EVI</span><span class="eq-d"> = (</span><span class="eq-g">price_score × 0.5</span><span class="eq-d"> + </span><span class="eq-g">energy_score × 0.3</span><span class="eq-d"> + </span><span class="eq-g">location_score × 0.3</span><span class="eq-d">) × 20</span>
       </div>
       <div class="formula-components">
         <div class="fc">
@@ -1371,7 +1371,7 @@
           <p class="fc-d">Índice composto por freguesia: densidade de parques urbanos, estações de Metro, extensão de ciclovias e postos Mobi.E. Dados Open Data C.M. Porto.</p>
         </div>
         <div class="fc">
-          <div class="fc-w">n ≥ 3</div>
+          <div class="fc-w">n ≥ 4</div>
           <div class="fc-n">Amostra Mínima</div>
           <p class="fc-d">Cálculos e visualizações só são activados com pelo menos 3 imóveis no segmento. Mediana + P25/P75 — nunca média aritmética.</p>
         </div>
